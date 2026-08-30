@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+TestResults/
+*.trx
+.vs/
+.vscode/
+*.user
+*.suo
+**/local.settings.json
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.snk
+.DS_Store
+Thumbs.db
