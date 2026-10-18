@@ -65,15 +65,37 @@ public sealed class PriceSyncServiceTests
     public async Task SynchronizeAsync_RequestedGbpAndReturnedGbp_UpdatesPrice()
     {
         var repository = new FakeRepository([Product("£2.00")]);
-        var client = new FakeEtsyClient(Listing("GBP", 211));
+        var client = new FakeEtsyClient(Listing("GBP", 211, Money("USD", 999)));
         var result = await CreateService(repository, client, "GBP").SynchronizeAsync(CancellationToken.None);
         Assert.Equal("GBP", client.RequestedCurrency);
         Assert.Equal("£2.11", Assert.Single(repository.Updates).Price);
         Assert.Equal(1, result.PricesChanged);
     }
 
+    [Fact]
+    public async Task SynchronizeAsync_NonGbpCurrency_UsesConvertedPrice()
+    {
+        var repository = new FakeRepository([Product("$2.00")]);
+        var listing = Listing("GBP", 999, Money("USD", 229));
+        var result = await CreateService(repository, listing, "USD").SynchronizeAsync(CancellationToken.None);
+        Assert.Equal("$2.29", Assert.Single(repository.Updates).Price);
+        Assert.Equal(1, result.PricesChanged);
+    }
+
+    [Fact]
+    public async Task SynchronizeAsync_NonGbpCurrencyWithoutConvertedPrice_PreservesExistingPrice()
+    {
+        var repository = new FakeRepository([Product("$2.00")]);
+        var result = await CreateService(repository, Listing("USD", 229, null), "USD").SynchronizeAsync(CancellationToken.None);
+        Assert.Empty(repository.Updates);
+        Assert.Equal(1, result.ProductsSkipped);
+        Assert.Equal(1, result.Failures);
+    }
+
     private static Product Product(string price) => new(Guid.NewGuid(), "Product", "https://www.etsy.com/listing/1765516952/example", price, "published", null, null, null);
-    private static EtsyListing Listing(string currency, long amount) => new() { ListingId = 1765516952, State = "active", Price = new EtsyMoney { Amount = amount, Divisor = 100, CurrencyCode = currency } };
+    private static EtsyListing Listing(string currency, long amount) => Listing(currency, amount, Money(currency, amount));
+    private static EtsyListing Listing(string currency, long amount, EtsyMoney? convertedPrice) => new() { ListingId = 1765516952, State = "active", Price = Money(currency, amount), ConvertedPrice = convertedPrice };
+    private static EtsyMoney Money(string currency, long amount) => new() { Amount = amount, Divisor = 100, CurrencyCode = currency };
     private static PriceSyncService CreateService(FakeRepository repository, EtsyListing? listing, string currency, int failedRequests = 0) => CreateService(repository, new FakeEtsyClient(listing, failedRequests), currency);
     private static PriceSyncService CreateService(FakeRepository repository, FakeEtsyClient client, string currency) => new(repository, client, new EtsyListingIdParser(), new CurrencyPriceFormatter(), Options.Create(new EtsyOptions { Currency = currency }), TimeProvider.System, NullLogger<PriceSyncService>.Instance);
 

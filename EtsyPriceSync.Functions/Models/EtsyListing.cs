@@ -10,6 +10,8 @@ public sealed class EtsyListing
     public string? State { get; init; }
     [JsonPropertyName("price")]
     public EtsyMoney? Price { get; init; }
+    [JsonPropertyName("converted_price")]
+    public EtsyMoney? ConvertedPrice { get; init; }
     [JsonPropertyName("has_variations")]
     public bool HasVariations { get; init; }
 }

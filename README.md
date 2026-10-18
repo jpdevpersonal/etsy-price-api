@@ -34,7 +34,7 @@ When has_variations is true, the public listing-level price is used and logged. 
 
 ## Currency and money
 
-Set Etsy__Currency to an ISO 4217 code such as USD, GBP, EUR, AUD, or CAD. The returned currency_code must match. Etsy Money is `amount / divisor` using decimal; divisor is not assumed to be 100.
+Set Etsy__Currency to an ISO 4217 code such as USD, GBP, EUR, AUD, or CAD. For GBP, the sync uses Etsy's `price` field; for any other configured currency, it uses `converted_price`. The selected field's `currency_code` must match the configured currency or the product price is preserved. Etsy Money is `amount / divisor` using decimal; divisor is not assumed to be 100.
 
 CultureInfo and RegionInfo provide currency metadata. Conventional output includes $2.11, £2.11, and €2.11. Ambiguous symbols use an ISO form such as CAD 2.11 instead of a large handwritten switch.
 
@@ -76,4 +76,3 @@ Before the first real Etsy test: copy ignored settings; replace the keystring, s
 Before a development-database test: restore a representative non-production copy, back up sample prices, run/review migration, grant minimal rights, execute once, and verify changed, unchanged, skipped, currency, and timestamp behavior.
 
 Before Azure deployment: reconfirm Etsy current API/auth and rate limits; approve the migration under change control; choose an Azure Functions v4 host supporting the isolated runtime; configure storage, schedule, currency, Key Vault, managed identity, networking, monitoring/Application Insights, alerts, backups, and rollback; rerun restore/build/tests; then deploy separately. This repository does not deploy or create Azure resources. Any future manual HTTP trigger must be authenticated; none is implemented.
-
