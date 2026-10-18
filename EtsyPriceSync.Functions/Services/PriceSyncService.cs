@@ -31,8 +31,9 @@ public sealed class PriceSyncService(IProductRepository repository, IEtsyClient 
             cancellationToken.ThrowIfCancellationRequested();
             if (!fetched.Listings.TryGetValue(listingId, out var listing)) { skipped++; failures++; logger.LogWarning("Etsy did not return listing {ListingId} for product {ProductId}; price preserved.", listingId, product.Id); continue; }
             if (!string.IsNullOrWhiteSpace(listing.State) && !string.Equals(listing.State, "active", StringComparison.OrdinalIgnoreCase)) { skipped++; logger.LogWarning("Listing {ListingId} is {State}; price preserved.", listingId, listing.State); continue; }
-            if (listing.Price is null || !listing.Price.TryGetDecimalAmount(out var amount)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} has no valid price; price preserved.", listingId); continue; }
-            if (!string.Equals(listing.Price.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} returned {ReturnedCurrency}, not {Currency}; price preserved.", listingId, listing.Price.CurrencyCode, currency); continue; }
+            var etsyPrice = string.Equals(currency, "GBP", StringComparison.OrdinalIgnoreCase) ? listing.Price : listing.ConvertedPrice;
+            if (etsyPrice is null || !etsyPrice.TryGetDecimalAmount(out var amount)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} has no valid {PriceField}; price preserved.", listingId, currency == "GBP" ? "price" : "converted_price"); continue; }
+            if (!string.Equals(etsyPrice.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} returned {ReturnedCurrency}, not {Currency}; price preserved.", listingId, etsyPrice.CurrencyCode, currency); continue; }
             if (listing.HasVariations) logger.LogInformation("Listing {ListingId} has variations; using its public listing-level price, which may be a starting price.", listingId);
             var price = formatter.Format(amount, currency);
             var isChanged = !string.Equals(product.Price, price, StringComparison.Ordinal);

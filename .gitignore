@@ -15,3 +15,8 @@ TestResults/
 *.snk
 .DS_Store
 Thumbs.db
+AzuriteConfig
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
+__tablestorage__/

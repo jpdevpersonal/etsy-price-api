@@ -14,10 +14,13 @@ public sealed class EtsyClientTests
     [Fact]
     public async Task GetListingsAsync_Http200_ReturnsListingAndUsesBatchEndpoint()
     {
-        var json = JsonSerializer.Serialize(new { count = 1, results = new[] { new { listing_id = 123L, state = "active", price = new { amount = 211L, divisor = 100L, currency_code = "USD" } } } });
+        var json = JsonSerializer.Serialize(new { count = 1, results = new[] { new { listing_id = 123L, state = "active", price = new { amount = 211L, divisor = 100L, currency_code = "GBP" }, converted_price = new { amount = 229L, divisor = 100L, currency_code = "USD" } } } });
         var handler = new StubHandler(_ => Response(HttpStatusCode.OK, json));
         var result = await CreateClient(handler).GetListingsAsync([123], "USD", CancellationToken.None);
         Assert.Single(result.Listings);
+        Assert.Equal("GBP", result.Listings[123].Price?.CurrencyCode);
+        Assert.Equal("USD", result.Listings[123].ConvertedPrice?.CurrencyCode);
+        Assert.Equal(229L, result.Listings[123].ConvertedPrice?.Amount);
         Assert.Equal(1, result.RequestsMade);
         Assert.Equal(0, result.FailedRequests);
         Assert.Contains("application/listings/batch?", handler.Uris.Single());
