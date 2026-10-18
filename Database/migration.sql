@@ -5,6 +5,7 @@ BEGIN TRANSACTION;
 IF COL_LENGTH(N'dbo.Products', N'EtsyListingId') IS NULL ALTER TABLE dbo.Products ADD EtsyListingId bigint NULL;
 IF COL_LENGTH(N'dbo.Products', N'PriceCurrency') IS NULL ALTER TABLE dbo.Products ADD PriceCurrency char(3) NULL;
 IF COL_LENGTH(N'dbo.Products', N'PriceLastSyncedUtc') IS NULL ALTER TABLE dbo.Products ADD PriceLastSyncedUtc datetime2 NULL;
+GO
 
 /* Best-effort backfill from HTTPS Etsy /listing/{numeric-id} URLs. */
 ;WITH UrlParts AS
