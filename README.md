@@ -76,3 +76,8 @@ Before the first real Etsy test: copy ignored settings; replace the keystring, s
 Before a development-database test: restore a representative non-production copy, back up sample prices, run/review migration, grant minimal rights, execute once, and verify changed, unchanged, skipped, currency, and timestamp behavior.
 
 Before Azure deployment: reconfirm Etsy current API/auth and rate limits; approve the migration under change control; choose an Azure Functions v4 host supporting the isolated runtime; configure storage, schedule, currency, Key Vault, managed identity, networking, monitoring/Application Insights, alerts, backups, and rollback; rerun restore/build/tests; then deploy separately. This repository does not deploy or create Azure resources. Any future manual HTTP trigger must be authenticated; none is implemented.
+
+
+
+Local test database
+// "Database__ConnectionString": "Server=172.28.112.1,1433;Database=simplebiztoolkit-test;User ID=sa;Password=T0mbraider&1;Encrypt=True;TrustServerCertificate=True;"

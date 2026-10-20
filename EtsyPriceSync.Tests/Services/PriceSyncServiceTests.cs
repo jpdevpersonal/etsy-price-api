@@ -32,6 +32,17 @@ public sealed class PriceSyncServiceTests
     }
 
     [Fact]
+    public async Task SynchronizeAsync_StoresReturnedCurrencyCodeAndCheckTimestamp()
+    {
+        var repository = new FakeRepository([Product("$2.11")]);
+        var listing = Listing("GBP", 999, Money("usd", 211));
+        await CreateService(repository, listing, "USD").SynchronizeAsync(CancellationToken.None);
+        var update = Assert.Single(repository.Updates);
+        Assert.Equal("usd", update.Currency);
+        Assert.NotEqual(default, update.CheckedAtUtc);
+    }
+
+    [Fact]
     public async Task SynchronizeAsync_EtsyFailure_PreservesExistingPrice()
     {
         var repository = new FakeRepository([Product("$2.11")]);

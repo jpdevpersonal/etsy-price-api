@@ -33,13 +33,15 @@ public sealed class PriceSyncService(IProductRepository repository, IEtsyClient 
             if (!string.IsNullOrWhiteSpace(listing.State) && !string.Equals(listing.State, "active", StringComparison.OrdinalIgnoreCase)) { skipped++; logger.LogWarning("Listing {ListingId} is {State}; price preserved.", listingId, listing.State); continue; }
             var etsyPrice = string.Equals(currency, "GBP", StringComparison.OrdinalIgnoreCase) ? listing.Price : listing.ConvertedPrice;
             if (etsyPrice is null || !etsyPrice.TryGetDecimalAmount(out var amount)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} has no valid {PriceField}; price preserved.", listingId, currency == "GBP" ? "price" : "converted_price"); continue; }
-            if (!string.Equals(etsyPrice.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} returned {ReturnedCurrency}, not {Currency}; price preserved.", listingId, etsyPrice.CurrencyCode, currency); continue; }
+            if (string.IsNullOrWhiteSpace(etsyPrice.CurrencyCode)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} returned no currency code; price preserved.", listingId); continue; }
+            var returnedCurrencyCode = etsyPrice.CurrencyCode;
+            if (!string.Equals(returnedCurrencyCode, currency, StringComparison.OrdinalIgnoreCase)) { skipped++; failures++; logger.LogWarning("Listing {ListingId} returned {ReturnedCurrency}, not {Currency}; price preserved.", listingId, returnedCurrencyCode, currency); continue; }
             if (listing.HasVariations) logger.LogInformation("Listing {ListingId} has variations; using its public listing-level price, which may be a starting price.", listingId);
             var price = formatter.Format(amount, currency);
             var isChanged = !string.Equals(product.Price, price, StringComparison.Ordinal);
             try
             {
-                await repository.RecordSuccessfulPriceCheckAsync(product.Id, listingId, price, currency, timeProvider.GetUtcNow().UtcDateTime, isChanged, cancellationToken);
+                await repository.RecordSuccessfulPriceCheckAsync(product.Id, listingId, price, returnedCurrencyCode, timeProvider.GetUtcNow().UtcDateTime, isChanged, cancellationToken);
                 if (isChanged) changed++; else unchanged++;
             }
             catch (Exception ex) when (ex is not OperationCanceledException) { skipped++; failures++; logger.LogError(ex, "Failed to record price for product {ProductId}; continuing.", product.Id); }
