@@ -5,6 +5,7 @@ BEGIN TRANSACTION;
 IF COL_LENGTH(N'dbo.Products', N'EtsyListingId') IS NULL ALTER TABLE dbo.Products ADD EtsyListingId bigint NULL;
 IF COL_LENGTH(N'dbo.Products', N'PriceCurrency') IS NULL ALTER TABLE dbo.Products ADD PriceCurrency char(3) NULL;
 IF COL_LENGTH(N'dbo.Products', N'PriceLastSyncedUtc') IS NULL ALTER TABLE dbo.Products ADD PriceLastSyncedUtc datetime2 NULL;
+IF COL_LENGTH(N'dbo.Products', N'BuyerPrice') IS NULL ALTER TABLE dbo.Products ADD BuyerPrice nvarchar(MAX) NULL;
 GO
 
 /* Best-effort backfill from HTTPS Etsy /listing/{numeric-id} URLs. */
@@ -36,4 +37,5 @@ IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID(
 IF COL_LENGTH(N'dbo.Products',N'PriceLastSyncedUtc') IS NOT NULL ALTER TABLE dbo.Products DROP COLUMN PriceLastSyncedUtc;
 IF COL_LENGTH(N'dbo.Products',N'PriceCurrency') IS NOT NULL ALTER TABLE dbo.Products DROP COLUMN PriceCurrency;
 IF COL_LENGTH(N'dbo.Products',N'EtsyListingId') IS NOT NULL ALTER TABLE dbo.Products DROP COLUMN EtsyListingId;
+IF COL_LENGTH(N'dbo.Products',N'BuyerPrice') IS NOT NULL ALTER TABLE dbo.Products DROP COLUMN BuyerPrice;
 */
